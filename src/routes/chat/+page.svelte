@@ -1,5 +1,4 @@
 <script lang="ts">
-  import "../app.css";
   import { io, Socket } from "socket.io-client";
 
   let message = $state('hi');

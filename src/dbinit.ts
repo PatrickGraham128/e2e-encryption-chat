@@ -11,7 +11,7 @@ const db: Database = await open({
 
 try {
   db.run("DROP TABLE IF EXISTS USERS");
-  db.run("CREATE TABLE IF NOT EXISTS USERS (username, email, password, token, exp)");
+  db.run("CREATE TABLE IF NOT EXISTS USERS (username TEXT, email TEXT, password TEXT, token TEXT, exp INTEGER)");
   console.log("Database successfully initialised")
 } catch (e) {
   console.log(e)
