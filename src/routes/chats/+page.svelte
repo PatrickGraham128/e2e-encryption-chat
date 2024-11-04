@@ -13,7 +13,15 @@
     /** generate public and private keys */
     const myKeyPair = forge.pki.rsa.generateKeyPair(2048);
     const myPublicKeyPem = forge.pki.publicKeyToPem(myKeyPair.publicKey);
-    const myPrivateKeyPem = forge.pki.publicKeyToPem(myKeyPair.publicKey);
+
+    /** need PKCS 8 to use web crypto API*/
+    var rsaPrivateKey = forge.pki.privateKeyToAsn1(myKeyPair.privateKey);
+
+    // wrap an RSAPrivateKey ASN.1 object in a PKCS#8 ASN.1 PrivateKeyInfo
+    var privateKeyInfo = forge.pki.wrapRsaPrivateKey(rsaPrivateKey);
+
+    // convert a PKCS#8 ASN.1 PrivateKeyInfo to PEM
+    var myPrivateKeyPem = forge.pki.privateKeyInfoToPem(privateKeyInfo);
     sessionStorage.setItem("publicKey", myPublicKeyPem)
     sessionStorage.setItem("privateKey", myPrivateKeyPem)
 
