@@ -22,11 +22,12 @@
     }).then( data => {
       /** set user's cookie */
       sessionStorage.setItem("cookie", data.token)
-      goto("/chat")
+      sessionStorage.setItem("user", username)
+      goto("/chats")
   })}
 </script>
 
-<div class="artboard phone-1 secondary" style="margin-left: auto; margin-right: auto; display: flex; flex-direction: column; gap: 15px;">
+<div class="artboard phone-1 secondary board bg-base-200">
   <input bind:value={username} type="text" placeholder="Type here" class="input input-bordered w-full max-w-xs" />
   <input bind:value={email} type="text" placeholder="Type here" class="input input-bordered w-full max-w-xs" />
   <input bind:value={password} type="text" placeholder="Type here" class="input input-bordered w-full max-w-xs" />
@@ -34,4 +35,15 @@
 </div>
 
 <style>
+  .board {
+    margin-left: auto;
+    margin-right: auto; 
+    display: flex; 
+    flex-direction: column;
+    gap: 15px;
+    border-radius: 30px;
+    padding: 15px;
+    padding-top: 30px;
+    margin-top: 40px;
+  }
 </style>

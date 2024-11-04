@@ -1,36 +1,61 @@
 <script lang="ts">
-  import { io, Socket } from "socket.io-client";
+  import { onMount } from 'svelte';
+  import socketStore from '../../socket';
+  import { messageStore } from '../../socket';
+  import NodeRSA from 'node-rsa';
 
-  let message = $state('hi');
+  let socket: any;
+  socketStore.subscribe((sock: any) => {socket = sock})
+
+  let message = $state('');
+
+  /** @type {{ data: import('./$types').PageData }} */
+    let { data } = $props();
+  const user: string = data.username as string;
+
   let messages: any = $state([]);
-  let container: HTMLDivElement;
+  const unsubscribe = messageStore.subscribe((msgs: any) => {
+    messages = msgs[user] || []; // Update messages reactively
+  });
 
-  interface ServerToClientEvents {
-    noArg: () => void;
-    basicEmit: (a: number, b: string, c: Buffer) => void;
-    withAck: (d: string, callback: (e: number) => void) => void;
-  }
+  let publicKey: string;
+  const params = new URLSearchParams({ user: user });
 
-  interface ClientToServerEvents {
-    recvMessage: (msg: String) => void;
-  }
-
-  const socket: Socket<
-    ServerToClientEvents,
-    ClientToServerEvents
-    > = io("http://127.0.0.1:3000");
+  onMount(() => {
+    fetch((`http://localhost:3000/publickey?${params.toString()}`), {
+    method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then((res) => res.json()).then(data => {
+      publicKey = new NodeRSA(data.key);
+    })
+  })
 
   const sendMessage = (e: any) => {
     e.preventDefault()
-    messages.push({content: message, position: 'chat-end', color: 'chat-bubble-primary'})
-    console.log(messages)
-    socket.emit("recvMessage", message);
+
+    let encryptedMessage = publicKey.encrypt(message, 'base64');
+    console.log(encryptedMessage)
+
+    const newMsg = {content: encryptedMessage, position: 'chat-end', color: 'chat-bubble-primary'}
+    messageStore.update((msgs: any) => {
+      console.log("fontend " + user)
+      if (!msgs[user]) {
+        msgs[user] = [];
+      }
+      msgs[user] = [...msgs[user], newMsg];
+      console.log(msgs)
+      return msgs;
+    })
+    socket.emit("recvMessage", user, message);
     message = '';
   }
 </script>
 
-<div bind:this={container} class="artboard phone-1" style="margin-left: auto; margin-right: auto; display: flex; justify-content: space-between; flex-direction: column;">
-  <div>
+<div class="artboard phone-1 board bg-base-200">
+  <b>{user}</b>
+  <div class="msg-container">
     {#each messages as m}
       <div class="chat {m.position}">
         <div class="chat-bubble {m.color}">{m.content}</div>
@@ -43,4 +68,21 @@
 </div>
 
 <style>
+  .board {
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    border-radius: 30px;
+    padding: 15px;
+    margin-top: 40px;
+    text-align: center;
+  }
+
+  .msg-container {
+    height: 420px;
+    max-height: 420px;
+    overflow-y: scroll;
+  }
 </style>
